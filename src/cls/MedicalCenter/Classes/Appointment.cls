@@ -15,7 +15,15 @@ Property Patient As MedicalCenter.Patient;
 
 Property Doctor As MedicalCenter.Doctor;
 
-Index ApptIdIdx On ApptId [ Unique ];
+Index ApptIdKey On ApptId [ IdKey ];
+
+Query Upcoming() As %SQLQuery
+{
+    SELECT ApptId, DateTime, Patient->LastName, Doctor->LastName
+    FROM MedicalCenter.Appointment
+    WHERE DateTime > CURRENT_TIMESTAMP
+    ORDER BY DateTime
+}
 
 Storage Default
 {
@@ -24,24 +32,21 @@ Storage Default
 <Value>%%CLASSNAME</Value>
 </Value>
 <Value name="2">
-<Value>ApptId</Value>
-</Value>
-<Value name="3">
 <Value>DateTime</Value>
 </Value>
-<Value name="4">
+<Value name="3">
 <Value>Duration</Value>
 </Value>
-<Value name="5">
+<Value name="4">
 <Value>Status</Value>
 </Value>
-<Value name="6">
+<Value name="5">
 <Value>Notes</Value>
 </Value>
-<Value name="7">
+<Value name="6">
 <Value>Patient</Value>
 </Value>
-<Value name="8">
+<Value name="7">
 <Value>Doctor</Value>
 </Value>
 </Data>

@@ -19,7 +19,15 @@ Method AgeGet() As %Integer
     Quit ($Horolog - ..DateOfBirth) \ 365.25
 }
 
-Index PersonIdIdx On PersonId [ Unique ];
+Index PersonIdKey On PersonId [ IdKey ];
+
+Query ByName(name As %String) As %SQLQuery(CONTAINID = 1)
+{
+    SELECT %ID, FirstName, LastName, DateOfBirth 
+    FROM MedicalCenter.Person 
+    WHERE LastName %STARTSWITH :name
+    ORDER BY LastName
+}
 
 Storage Default
 {
@@ -28,18 +36,15 @@ Storage Default
 <Value>%%CLASSNAME</Value>
 </Value>
 <Value name="2">
-<Value>PersonId</Value>
-</Value>
-<Value name="3">
 <Value>FirstName</Value>
 </Value>
-<Value name="4">
+<Value name="3">
 <Value>LastName</Value>
 </Value>
-<Value name="5">
+<Value name="4">
 <Value>DateOfBirth</Value>
 </Value>
-<Value name="6">
+<Value name="5">
 <Value>Address</Value>
 </Value>
 </Data>

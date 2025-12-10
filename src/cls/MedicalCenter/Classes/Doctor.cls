@@ -17,6 +17,13 @@ Relationship Patients As MedicalCenter.Patient [ Cardinality = many, Inverse = P
 
 Index LicenseNoIdx On LicenseNo [ Unique ];
 
+Query BySpecialization(spec As %String) As %SQLQuery
+{
+    SELECT LastName, FirstName, Department->Name As DeptName
+    FROM MedicalCenter.Doctor
+    WHERE Specialization = :spec
+}
+
 Storage Default
 {
 <Data name="DoctorDefaultData">

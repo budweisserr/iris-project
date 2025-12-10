@@ -57,4 +57,96 @@ ClassMethod ClearAll() As %Status
     Quit sc
 }
 
+// lab 7
+
+ClassMethod DemoDynamicSQL(minExp As %Integer)
+{
+    Write !, "Dynamic SQL: Doctors with Experience > ", minExp, !
+    Set sql = "SELECT PersonId, FirstName, LastName, Specialization FROM MedicalCenter.Doctor WHERE Experience > ?"
+    
+    Set stmt = ##class(%SQL.Statement).%New()
+    Set status = stmt.%Prepare(sql)
+    
+    If $$$ISERR(status) {
+        Do $System.Status.DisplayError(status)
+        Quit
+    }
+    
+    Set rset = stmt.%Execute(minExp)
+    
+    While rset.%Next() {
+        Write "ID: ", rset.%Get("PersonId"), " | ", rset.%Get("FirstName"), " ", rset.%Get("LastName"), " (", rset.%Get("Specialization"), ")", !
+    }
+}
+
+ClassMethod DemoEmbeddedSimple(docLicense As %String)
+{
+    Write !, "Embedded SQL", !
+    New SQLCODE, count, docName
+    
+    &sql(SELECT Count(*), PrimaryDoctor->LastName 
+         INTO :count, :docName
+         FROM MedicalCenter.Patient
+         WHERE PrimaryDoctor->LicenseNo = :docLicense)
+         
+    If SQLCODE = 0 {
+        Write "Doctor ", docName, " has ", count, " assigned patients.", !
+    } Else {
+        Write "Error or No Data. SQLCODE: ", SQLCODE, !
+    }
+}
+
+ClassMethod DemoEmbeddedCursor(statusStr As %String)
+{
+    Write !, "Embedded SQL (Cursor) for status: ", statusStr, !
+    New SQLCODE, patName, docName, apptDate
+    
+    &sql(DECLARE ApptCursor CURSOR FOR 
+         SELECT DateTime, Patient->LastName, Doctor->LastName
+         INTO :apptDate, :patName, :docName
+         FROM MedicalCenter.Appointment
+         WHERE Status = :statusStr)
+         
+    &sql(OPEN ApptCursor)
+    
+    For {
+        &sql(FETCH ApptCursor)
+        Quit:(SQLCODE '= 0)
+        
+        Write "Date: ", apptDate, " | Patient: ", patName, " | Doctor: ", docName, !
+    }
+    
+    &sql(CLOSE ApptCursor)
+    Write "End of Cursor data.", !
+}
+
+ClassMethod TestTrigger(patientId As %String)
+{
+    Write !, "Testing Trigger", !
+    Set pat = ##class(MedicalCenter.Patient).%OpenId(patientId)
+    If '$IsObject(pat) Write "Patient not found.",! Quit
+    
+    Write "Current BloodType: ", pat.BloodType, !
+    
+    // Change data to trigger update
+    Set pat.BloodType = $Case(pat.BloodType, "A":"B", "B":"O", "O":"AB", :"A")
+    Set sc = pat.%Save()
+    
+    If $$$ISOK(sc) {
+        Write "Patient saved. Checking Log...", !
+        
+        // Initialize val to avoid UNDEFINED error
+        Set val = ""
+        Set logTime = $Order(^PatientLog(patientId, ""), -1, val)
+        
+        If (logTime = "") {
+             Write "NO LOG FOUND. The trigger did not fire or write data.", !
+        } Else {
+             Write "Log Entry [", $ZDateTime(logTime), "]: ", val, !
+        }
+    } Else {
+        Do $System.Status.DisplayError(sc)
+    }
+}
+
 }

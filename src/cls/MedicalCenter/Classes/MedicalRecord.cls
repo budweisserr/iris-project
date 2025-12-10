@@ -17,7 +17,14 @@ Relationship Patient As MedicalCenter.Patient [ Cardinality = parent, Inverse = 
 
 Property AttendingDoctor As MedicalCenter.Doctor;
 
-Index RecordIdIdx On RecordId [ Unique ];
+Index RecordIdKey On RecordId [ IdKey ];
+
+Query ByDiagnosis(diag As %String) As %SQLQuery
+{
+    SELECT RecordId, VisitDate, Patient->LastName
+    FROM MedicalCenter.MedicalRecord
+    WHERE Diagnosis [ :diag
+}
 
 Storage Default
 {
@@ -26,24 +33,21 @@ Storage Default
 <Value>%%CLASSNAME</Value>
 </Value>
 <Value name="2">
-<Value>RecordId</Value>
-</Value>
-<Value name="3">
 <Value>VisitDate</Value>
 </Value>
-<Value name="4">
+<Value name="3">
 <Value>Diagnosis</Value>
 </Value>
-<Value name="5">
+<Value name="4">
 <Value>Treatment</Value>
 </Value>
-<Value name="6">
+<Value name="5">
 <Value>TestResults</Value>
 </Value>
-<Value name="7">
+<Value name="6">
 <Value>DetailedNotes</Value>
 </Value>
-<Value name="8">
+<Value name="7">
 <Value>AttendingDoctor</Value>
 </Value>
 </Data>

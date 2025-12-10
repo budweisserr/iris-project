@@ -11,7 +11,14 @@ Property HeadDoctor As MedicalCenter.Doctor;
 
 Relationship Doctors As MedicalCenter.Doctor [ Cardinality = many, Inverse = Department ];
 
-Index DeptIdIdx On DeptId [ Unique ];
+Index DeptIdKey On DeptId [ IdKey ];
+
+Query FindByCapacity(minCap As %Integer = 10) As %SQLQuery
+{
+    SELECT Name, Capacity, HeadDoctor->LastName As HeadDoctorName
+    FROM MedicalCenter.Department
+    WHERE Capacity >= :minCap
+}
 
 Storage Default
 {
@@ -20,15 +27,12 @@ Storage Default
 <Value>%%CLASSNAME</Value>
 </Value>
 <Value name="2">
-<Value>DeptId</Value>
-</Value>
-<Value name="3">
 <Value>Name</Value>
 </Value>
-<Value name="4">
+<Value name="3">
 <Value>Capacity</Value>
 </Value>
-<Value name="5">
+<Value name="4">
 <Value>HeadDoctor</Value>
 </Value>
 </Data>
