@@ -149,4 +149,29 @@ ClassMethod TestTrigger(patientId As %String)
     }
 }
 
+ClassMethod TestCOSQuery()
+{
+    Write "Testing COS Query",!
+    
+    Set stmt = ##class(%SQL.Statement).%New()
+    
+    Set status = stmt.%PrepareClassQuery("MedicalCenter.Patient", "AllPatients")
+    If $$$ISERR(status) Do $System.Status.DisplayError(status) Quit
+    
+    Set rset = stmt.%Execute()
+    
+    While rset.%Next() {
+        Write "ID: ", rset.%Get("ID"), " | Name: ", rset.%Get("FullName"), " | Age: ", rset.%Get("Age"),!
+    }
+}
+
+ClassMethod TestAgeProperty(patientId As %String)
+{
+    Set pat = ##class(MedicalCenter.Patient).%OpenId(patientId)
+    If '$IsObject(pat) Write "Patient not found",! Quit
+    
+    Write "Patient: ", pat.LastName, !
+    Write "Calculated Age: ", pat.Age, !
+}
+
 }
