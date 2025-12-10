@@ -1,0 +1,33 @@
+ROUTINE RunMedicalCenterTests
+
+    Set ^UnitTestRoot = "P:\IrisTestTempFolder"
+    Set SuiteName = "MedicalCenter"
+    Set ClassName = "MedicalCenter.Tests.PatientTest"
+
+    Set DirPath = ^UnitTestRoot_ "\" _ SuiteName
+    Do ##class(%File).CreateDirectory(DirPath)
+    Do $SYSTEM.OBJ.Export(ClassName_".cls", ^UnitTestRoot_ "\" _ SuiteName _ "\" _ ClassName _ ".xml")
+
+    Set test = SuiteName _ ":" _ ClassName
+    
+    Set quals = "/load/norecursive/nodelete" 
+    
+    Write "--- Starting Unit Tests for: "_ClassName_" ---", !
+    
+    Do ##class(%UnitTest.Manager).RunTest(test, quals)
+    
+   // Set ClassName = "MedicalCenter.Tests.RelationshipTest"
+
+    //Do $SYSTEM.OBJ.Export(ClassName_".cls", ^UnitTestRoot_ "\" _ SuiteName _ "\" _ ClassName _ ".xml")
+
+ //   Set test = SuiteName _ ":" _ ClassName
+
+   // Write "--- Starting Unit Tests for: "_ClassName_" ---", !
+
+    //Do ##class(%UnitTest.Manager).RunTest(test, quals)
+    
+    Write "--- Test run finished ---", !
+    
+    Quit
+
+macRunMedicalCenterTests ;

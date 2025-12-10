@@ -1,0 +1,181 @@
+ROUTINE CreateMedicalData
+    
+    ; Create Departments
+    Write "Creating Departments...", !
+    
+    Set dept1 = ##class(MedicalCenter.Department).%New()
+    Set dept1.DeptId = "1"
+    Set dept1.Name = "Кардіологія"
+    Set dept1.Capacity = 50
+    Set status = dept1.%Save()
+    
+    Set dept2 = ##class(MedicalCenter.Department).%New()
+    Set dept2.DeptId = "2"
+    Set dept2.Name = "Неврологія"
+    Set dept2.Capacity = 30
+    Set status = dept2.%Save()
+    
+    Write "Departments created successfully!", !
+    
+    ; Create Doctors
+    Write "Creating Doctors...", !
+    
+    Set doc1 = ##class(MedicalCenter.Doctor).%New()
+    Set doc1.PersonId = "1"
+    Set doc1.FirstName = "Іван"
+    Set doc1.LastName = "Козаченко"
+    Set doc1.DateOfBirth = $ZDATEH("1975-03-15", 3)
+    Set doc1.LicenseNo = "MD12345"
+    Set doc1.Specialization = "Кардіологія"
+    Set doc1.Experience = 20
+    Do doc1.Certifications.Insert("Комплексна сертифікація кардіолога")
+    Do doc1.Certifications.Insert("Спеціаліст з інтервенційної кардіології")
+    
+    Set addr1 = ##class(MedicalCenter.Address).%New()
+    Set addr1.Street = "вул. Медична, 123"
+    Set addr1.City = "Київ"
+    Set addr1.State = "Київська обл."
+    Set addr1.ZipCode = "10001"
+    Set doc1.Address = addr1
+    Set doc1.Department = dept1
+    Set status = doc1.%Save()
+    If 'status Do $SYSTEM.Status.DisplayError(status) Quit
+    
+    Set doc2 = ##class(MedicalCenter.Doctor).%New()
+    Set doc2.PersonId = "2"
+    Set doc2.FirstName = "Олена"
+    Set doc2.LastName = "Шевченко"
+    Set doc2.DateOfBirth = $ZDATEH("1980-07-22", 3)
+    Set doc2.LicenseNo = "MD67890"
+    Set doc2.Specialization = "Неврологія"
+    Set doc2.Experience = 15
+    Do doc2.Certifications.Insert("Сертифікований невролог")
+    Do doc2.Certifications.Insert("Спеціаліст з лікування розладів сну")
+    
+    Set addr2 = ##class(MedicalCenter.Address).%New()
+    Set addr2.Street = "просп. Здоров'я, 456"
+    Set addr2.City = "Львів"
+    Set addr2.State = "Львівська обл."
+    Set addr2.ZipCode = "02101"
+    Set doc2.Address = addr2
+    Set doc2.Department = dept2
+    Set status = doc2.%Save()
+    If 'status Do $SYSTEM.Status.DisplayError(status) Quit
+
+    Write "Doctors created successfully!", !
+    
+    ; Set Head Doctors
+    Set dept1.HeadDoctor = doc1
+    Do dept1.%Save()
+    If 'status Do $SYSTEM.Status.DisplayError(status) Quit
+    Set dept2.HeadDoctor = doc2
+    Do dept2.%Save()
+    If 'status Do $SYSTEM.Status.DisplayError(status) Quit
+    
+    ; Create Patients
+    Write "Creating Patients...", !
+    
+    Set patient1 = ##class(MedicalCenter.Patient).%New()
+    Set patient1.PersonId = "3"
+    Set patient1.FirstName = "Михайло"
+    Set patient1.LastName = "Давидов"
+    Set patient1.DateOfBirth = $ZDATEH("1985-05-10", 3)
+    Set patient1.MedicalRecordNo = "MRN001"
+    Set patient1.BloodType = "1+"
+    Do patient1.Allergies.Insert("Пеніцилін")
+    Do patient1.Allergies.Insert("Горіхи")
+    Do patient1.Medications.SetAt("200", "Ібупрофен")
+    Do patient1.Medications.SetAt("1", "чай")
+    
+    Set addr3 = ##class(MedicalCenter.Address).%New()
+    Set addr3.Street = "просп. Свободи, 789"
+    Set addr3.City = "Київ"
+    Set addr3.State = "Київська обл."
+    Set addr3.ZipCode = "10002"
+    Set patient1.Address = addr3
+    Set patient1.PrimaryDoctor = doc1
+    Set status = patient1.%Save()
+    If 'status Do $SYSTEM.Status.DisplayError(status) Quit
+    
+    Set patient2 = ##class(MedicalCenter.Patient).%New()
+    Set patient2.PersonId = "4"
+    Set patient2.FirstName = "Олександра"
+    Set patient2.LastName = "Бурченко"
+    Set patient2.DateOfBirth = $ZDATEH("1990-11-25", 3)
+    Set patient2.MedicalRecordNo = "MRN002"
+    Set patient2.BloodType = "2-"
+    Do patient2.Allergies.Insert("Латекс")
+    Do patient2.Medications.SetAt("200", "Ношпа")
+    
+    Set addr4 = ##class(MedicalCenter.Address).%New()
+    Set addr4.Street = "вул. Центральна, 321"
+    Set addr4.City = "Житомир"
+    Set addr4.State = "Житомирська обл."
+    Set addr4.ZipCode = "02102"
+    Set patient2.Address = addr4
+    Set patient2.PrimaryDoctor = doc2
+    Set status = patient2.%Save()
+    If 'status Do $SYSTEM.Status.DisplayError(status) Quit
+    
+    Write "Patients created successfully!", !
+    
+    ; Create Appointments
+    Write "Creating Appointments...", !
+    
+    Set appt1 = ##class(MedicalCenter.Appointment).%New()
+    Set appt1.ApptId = "1"
+    Set appt1.DateTime = $ZDATETIME($HOROLOG + 7, 3)
+    Set appt1.Duration = 30
+    Set appt1.Status = "Scheduled"
+    Set appt1.Patient = patient1
+    Set appt1.Doctor = doc1
+    Do appt1.Notes.Write("Чек-ап кардіолога")
+    
+    Set appt2 = ##class(MedicalCenter.Appointment).%New()
+    Set appt2.ApptId = "2"
+    Set appt2.DateTime = $ZDATETIME($HOROLOG + 14, 3)
+    Set appt2.Duration = 45
+    Set appt2.Status = "Scheduled"
+    Set appt2.Patient = patient2
+    Set appt2.Doctor = doc2
+    Do appt2.Notes.Write("Головні болі, консультація невролога")
+    Set status = appt2.%Save()
+    If 'status Do $SYSTEM.Status.DisplayError(status) Quit
+    
+    Write "Appointments created successfully!", !
+    
+    ; Create Medical Records
+    Write "Creating Medical Records...", !
+    
+    Set record1 = ##class(MedicalCenter.MedicalRecord).%New()
+    Set record1.RecordId = "1"
+    Set record1.VisitDate = $ZDATETIME($HOROLOG - 30, 3)
+    Set record1.Diagnosis = "Гіпертонічна хвороба, стадія II"
+    Set record1.Treatment = "Призначено антигіпертензивні препарати, дієта, фізична активність"
+    Do record1.TestResults.Insert("Тиск: 128/82")
+    Do record1.TestResults.Insert("Серцебиття: 72 bpm")
+    Do record1.TestResults.Insert("ЕКГ: Нормальний синусовий ритм")
+    Set record1.Patient = patient1
+    Set record1.AttendingDoctor = doc1
+    Do record1.DetailedNotes.Write("Пацієнт звернувся зі скаргами на головний біль та запаморочення. Рекомендовано регулярний моніторинг тиску та зміни способу життя.")
+    Set status = record1.%Save()
+    If 'status Do $SYSTEM.Status.DisplayError(status) Quit
+
+    Set record2 = ##class(MedicalCenter.MedicalRecord).%New()
+    Set record2.RecordId = "2"
+    Set record2.VisitDate = $ZDATETIME($HOROLOG - 60, 3)
+    Set record2.Diagnosis = "Хронічна мігрень"
+    Set record2.Treatment = "Призначено профілактичну терапію, рекомендації щодо уникнення тригерів"
+    Do record2.TestResults.Insert("МРТ головного мозку: Без патологій")
+    Do record2.TestResults.Insert("Неврологічний огляд: Нормальний")
+    Set record2.Patient = patient2
+    Set record2.AttendingDoctor = doc2
+    Do record2.DetailedNotes.Write("Пацієнтка скаржиться на часті мігрені, особливо під час стресу. Рекомендовано вести щоденник головного болю для виявлення тригерів.")
+    Set status = record2.%Save()
+    If 'status Do $SYSTEM.Status.DisplayError(status) Quit
+    
+
+    Write "ALL SAMPLE DATA CREATED SUCCESSFULLY!", !
+    
+    Quit
+CreateMedicalData ;

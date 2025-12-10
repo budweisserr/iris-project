@@ -1,0 +1,116 @@
+ROUTINE CorrectedLabSample
+Start
+    NEW choice
+    DO InitData
+    FOR  DO  QUIT:choice=5
+    . WRITE "1. Показати всі записи пацієнтів",!
+    . WRITE "2. Знайти пацієнта за ID",!
+    . WRITE "3. Додати новий запис",!
+    . WRITE "4. Підрахувати пацієнтів у відділенні",!
+    . WRITE "5. Вихід",!!
+    . READ "Ваш вибір: ",choice,!
+    . IF choice=1 DO ShowAll
+    . ELSE  IF choice=2 DO FindByID
+    . ELSE  IF choice=3 DO AddPatient
+    . ELSE  IF choice=4 DO CountByDept
+    . ELSE  IF choice=5 WRITE !,"Завершення роботи.",!
+    . ELSE  WRITE !,"Невірний вибір, спробуйте ще раз.",!
+    QUIT
+
+InitData // start data
+    KILL ^HospitalData
+    
+    SET date1 = $ZDATEH("2023-10-01", 3)
+    SET vitals1 = $LISTBUILD("36.6", "72", "120/80")
+    SET meds1 = "Аспірин,Вітамін С"
+    SET ^HospitalData("Київська №1", "Терапія", 1001, date1) = $LISTBUILD(vitals1, meds1)
+
+    SET date2 = $ZDATEH("2023-10-05", 3)
+    SET vitals2 = $LISTBUILD("38.0", "95", "135/90")
+    SET meds2 = "Парацетамол,Ібупрофен"
+    SET ^HospitalData("Київська №1", "Інфекційне", 1002, date2) = $LISTBUILD(vitals2, meds2)
+    
+    QUIT
+
+ShowAll // show all records
+    NEW node, data, vitals, meds, date
+    WRITE !,"   Всі записи   ",!
+    
+    SET node = $NAME(^HospitalData(""))
+    FOR  SET node = $QUERY(@node) QUIT:node=""  DO
+    . // subscript levels == 4
+    . IF $QLENGTH(node)=4 DO
+    . . SET data = $GET(@node)
+    . . // subscript for display index
+    . . WRITE "Лікарня: ", $QSUBSCRIPT(node, 1), " | Відділ: ", $QSUBSCRIPT(node, 2)
+    . . WRITE " | ID: ", $QSUBSCRIPT(node, 3)
+    . . SET date = $QSUBSCRIPT(node, 4)
+    . . WRITE " | Дата: ", $ZDATE(date, 3),!
+    . . 
+    . . // basically list get to get data
+    . . SET vitals = $LISTGET(data, 1) 
+    . . SET meds = $LISTGET(data, 2)   
+    . . 
+    . . WRITE "  Показники (T, HR, BP): ", $LISTTOSTRING(vitals, " / "),!
+    . . WRITE "  Ліки: ", meds,!,!
+    QUIT
+
+FindByID // find by id ))
+    NEW searchID, node, found
+    READ "Введіть ID пацієнта для пошуку: ",searchID,!
+    
+    SET node = $NAME(^HospitalData(""))
+    SET found = 0
+    
+    FOR  SET node = $QUERY(@node) QUIT:node=""  DO
+    . IF $QSUBSCRIPT(node, 3) = searchID DO
+    . . SET found = 1
+    . . WRITE !,"Знайдено запис у лікарні '", $QSUBSCRIPT(node, 1), "'",!
+    . . WRITE "Дата візиту: ", $ZDATE($QSUBSCRIPT(node, 4), 3),!
+    
+    IF 'found WRITE "Пацієнта з таким ID не знайдено.",!
+    QUIT
+
+AddPatient // new patient record
+    NEW hospital, dept, id, dateStr, dateNum, vitalsStr, medsStr, vitalsList
+    
+    READ "Введіть назву лікарні: ",hospital,!
+    READ "Введіть назву відділення: ",dept,!
+    READ "Введіть ID пацієнта (число): ",id,!
+    READ "Введіть дату запису (YYYY-MM-DD): ",dateStr,!
+    
+    SET dateNum = $ZDATEH(dateStr, 3)
+    
+    READ "Введіть показники (Темп,Пульс,Тиск) через кому: ",vitalsStr,!
+    //list --> string
+    SET vitalsList = $LISTFROMSTRING(vitalsStr, ",")
+    
+    READ "Введіть призначені ліки (через кому): ",medsStr,!
+
+    //list creating
+    SET ^HospitalData(hospital, dept, id, dateNum) = $LISTBUILD(vitalsList, medsStr)
+    
+    WRITE !,"Дані успішно збережено!",!
+    QUIT
+
+CountByDept //count specific records
+    NEW hospital, dept, count, id, date
+    READ "Введіть назву лікарні: ",hospital,!
+    READ "Введіть відділення: ",dept,!
+    
+    // checks for existence $DATA
+    IF '$DATA(^HospitalData(hospital, dept)) WRITE !,"У цьому відділенні немає записів.",! QUIT
+    
+    SET count = 0
+    SET id = ""
+    
+    // id loop
+    FOR  SET id = $ORDER(^HospitalData(hospital, dept, id)) QUIT:id=""  DO
+    . SET date = ""
+    . // date loop
+    . FOR  SET date = $ORDER(^HospitalData(hospital, dept, id, date)) QUIT:date=""  DO
+    . . SET count = count + 1
+    
+    WRITE !,"Всього записів у відділенні '", dept, "': ", count,!
+    QUIT
+CorrectedLabSample ;

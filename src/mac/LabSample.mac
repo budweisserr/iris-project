@@ -1,0 +1,108 @@
+ROUTINE LabSample
+Patient          
+    WRITE !
+    READ "Do you want to create new patient? (y/n): ", choice
+    IF choice="y" DO WritePatient                                                                         
+
+    WRITE !
+    READ "Display all stored patient records? (y/n): ", choice
+    IF choice="y" DO DisplayAllPatients
+
+    QUIT
+
+WritePatient
+    WRITE "--- Enter New Patient Record (Routine Version) ---",!
+    
+    READ "Enter Hospital Name: ", hospital ,!
+    READ "Enter Department Name: ", department ,!
+    READ "Enter Patient ID (number): ", patientID ,!
+    READ "Enter Record Date (YYYY-MM-DD): ", dateString ,!
+    
+    ; $HOROLOG format
+    SET recordDate = $ZDATEH(dateString, 3)
+    
+    ; create a $ListBuild list
+    READ "Enter Vitals (Temp,HeartRate,BP) separated by commas: ", vitalsString, !
+    SET vitalsList = $LISTFROMSTRING(vitalsString, ",")
+    
+    ; JSON array for medications
+    SET medicationsArray = ##class(%DynamicArray).%New()
+    SET med1 = ##class(%DynamicObject).%New()
+    DO med1.%Set("name", "Aspirin"), med1.%Set("dosage", "81mg")
+    DO medicationsArray.%Push(med1)
+    SET med2 = ##class(%DynamicObject).%New()
+    DO med2.%Set("name", "Lisinopril"), med2.%Set("dosage", "10mg")
+    DO medicationsArray.%Push(med2)
+    SET medicationsJSON = medicationsArray.%ToJSON()
+    WRITE !,"Sample medications created: ", medicationsJSON, !,!
+
+    DO SetData
+
+    DO ShowRecord
+
+    QUIT
+
+SetData ; save the data to the global
+    SET ^PatientData(hospital, department, patientID, recordDate, "vitals") = vitalsList
+    SET ^PatientData(hospital, department, patientID, recordDate, "medications") = medicationsJSON
+    WRITE "Patient data saved successfully!",!
+    QUIT
+
+ShowRecord ; read and display the data
+    IF '$DATA(^PatientData(hospital, department, patientID, recordDate)) {
+        WRITE "No record found for the given details.",!
+        QUIT
+    }
+    WRITE !, "--- Patient Record ---",!
+    WRITE "Hospital: ", hospital, " | Department: ", department, " | Patient ID: ", patientID, !
+    WRITE "Record Date: ", $ZDATE(recordDate, 3), !,!
+    
+    SET storedVitals = $GET(^PatientData(hospital, department, patientID, recordDate, "vitals"))
+    WRITE "Vitals Recorded: ", $ListLength(storedVitals), " items", !
+    FOR i=1:1:$ListLength(storedVitals) {
+        WRITE "  - ", $ListGet(storedVitals, i), !
+    }
+    
+    SET storedMeds = $GET(^PatientData(hospital, department, patientID, recordDate, "medications"))
+    TRY {
+        SET medsArray = ##class(%DynamicArray).%FromJSON(storedMeds)
+        WRITE !, "Medications Prescribed: ", medsArray.%Size(), " items", !
+        SET iterator = medsArray.%GetIterator()
+        WHILE iterator.%GetNext(.key, .medication) {
+            WRITE "  - Name: ", medication.%Get("name"), ", Dosage: ", medication.%Get("dosage"), !
+        }
+    } CATCH ex {
+        WRITE "Error processing medications: ", ex.AsSystemError(), !
+    }
+    WRITE "----------------------",!
+    QUIT
+
+DisplayAllPatients ; show all patients records
+    WRITE !, "--- All Patient Records ---"
+
+    SET hospital = ""
+    FOR {
+        SET hospital = $ORDER(^PatientData(hospital))
+        QUIT:hospital=""
+        
+        SET department = ""
+        FOR {
+            SET department = $ORDER(^PatientData(hospital, department))
+            QUIT:department=""
+            
+            SET patientID = ""
+            FOR {
+                SET patientID = $ORDER(^PatientData(hospital, department, patientID))
+                QUIT:patientID=""
+                
+                SET recordDate = ""
+                FOR {
+                    SET recordDate = $ORDER(^PatientData(hospital, department, patientID, recordDate))
+                    QUIT:recordDate=""
+                    
+                    DO ShowRecord
+                }
+            }
+        }
+    }
+    QUIT
